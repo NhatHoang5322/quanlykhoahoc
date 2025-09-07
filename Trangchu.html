@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trang Chủ</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #2e7d32;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        text-align: center;
+    }
+    h1 { font-size: 36px; margin-bottom: 50px; }
+    button {
+        padding: 15px 50px;
+        margin: 10px;
+        font-size: 20px;
+        border-radius: 25px;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    button:hover { opacity: 0.85; transform: translateY(-2px);}
+    .admin { background-color: #c62828; color: white; }
+    .giaovien { background-color: #1565c0; color: white; }
+    .phuhuynh { background-color: #8e24aa; color: white; }
+    @media(max-width: 600px){
+        button { width: 80%; padding: 15px; font-size: 18px; }
+        h1 { font-size: 28px; }
+    }
+</style>
+</head>
+<body>
+<h1>Chọn Vai Trò</h1>
+<button class="admin" onclick="location.href='Admin.html'">Admin</button>
+<button class="giaovien" onclick="location.href='Giaovien.html'">Giáo viên</button>
+<but

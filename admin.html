@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8d7da; margin:0; color:#333; }
+    header { background-color:#c62828; color:white; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
+    .container { max-width:1000px; margin:20px auto; padding:20px; background:white; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+    h2 { color:#c62828; margin-top:0; }
+    input, button { padding:10px; margin:5px 0; border-radius:15px; border:1px solid #ccc; font-size:16px; }
+    button { cursor:pointer; font-weight:bold; border:none; transition:0.3s; }
+    button:hover { opacity:0.8; }
+    .add-btn { background-color:#c62828; color:white; }
+    .edit-btn { background-color:#ff9800; color:white; }
+    .delete-btn { background-color:#f44336; color:white; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    th, td { padding:10px; border:1px solid #ddd; text-align:center; border-radius:10px; }
+    th { background-color:#f28b82; color:white; }
+    tr:nth-child(even) { background-color:#f9f9f9; }
+    .logout { float:right; margin-top:-60px; }
+    @media(max-width:600px){ input, button { width:100%; box-sizing:border-box; } }
+</style>
+</head>
+<body>
+<header>Admin Dashboard</header>
+
+<div class="container">
+    <div class="logout">
+        <button class="add-btn" onclick="location.href='Trangchu.html'">Đăng xuất</button>
+    </div>
+
+    <div id="loginDiv">
+        <h2>Đăng nhập Admin</h2>
+        <input type="text" id="adminUser" placeholder="Tài khoản"><br>
+        <input type="password" id="adminPass" placeholder="Mật khẩu"><br>
+        <button class="add-btn" onclick="loginAdmin()">Đăng nhập</button>
+    </div>
+
+    <div id="adminDiv" style="display:none;">
+        <h2>Quản lý Học sinh</h2>
+        <input type="text" id="hsName" placeholder="Tên học sinh">
+        <input type="date" id="hsStartDate">
+        <input type="password" id="hsPass" placeholder="Mật khẩu">
+        <button class="add-btn" onclick="addStudent()">Thêm Học sinh</button>
+        <table id="studentTable"></table>
+
+        <h2>Quản lý Giáo viên</h2>
+        <input type="text" id="gvName" placeholder="Tên giáo viên">
+        <input type="password" id="gvPass" placeholder="Mật khẩu">
+        <button class="add-btn" onclick="addTeacher()">Thêm Giáo viên</button>
+        <table id="teacherTable"></table>
+    </div>
+</div>
+
+<script>
+// Admin login + CRUD
+const adminAccount = { user:'admin', pass:'123' };
+let students = JSON.parse(localStorage.getItem('students') || '[]');
+let teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+
+function loginAdmin(){
+    const u = document.getElementById('adminUser').value;
+    const p = document.getElementById('adminPass').value;
+    if(u === adminAccount.user && p === adminAccount.pass){
+        document.getElementById('loginDiv').style.display='none';
+        document.getElementById('adminDiv').style.display='block';
+        renderTables();
+    } else alert('Sai tài khoản hoặc mật khẩu!');
+}
+
+// Students
+function renderTables(){
+    const st = document.getElementById('studentTable');
+    st.innerHTML='<tr><th>Mã HS</th><th>Tên</th><th>Ngày bắt đầu</th><th>Mật khẩu</th><th>Hành động</th></tr>';
+    students.forEach((s,i)=>{
+        st.innerHTML+=`<tr><td>${s.id}</td><td>${s.name}</td><td>${s.startDate}</td><td>${s.pass}</td>
+        <td><button class="edit-btn" onclick="editStudent(${i})">Sửa</button>
+        <button class="delete-btn" onclick="deleteStudent(${i})">Xóa</button></td></tr>`;
+    });
+
+    const tt = document.getElementById('teacherTable');
+    tt.innerHTML='<tr><th>Mã GV</th><th>Tên</th><th>Mật khẩu</th><th>Hành động</th></tr>';
+    teachers.forEach((t,i)=>{
+        tt.innerHTML+=`<tr><td>${t.id}</td><td>${t.name}</td><td>${t.pass}</td>
+        <td><button class="edit-btn" onclick="editTeacher(${i})">Sửa</button>
+        <button class="delete-btn" onclick="deleteTeacher(${i})">Xóa</button></td></tr>`;
+    });
+}
+
+function addStudent(){
+    const name=document.getElementById('hsName').value;
+    const pass=document.getElementById('hsPass').value;
+    const startDate=document.getElementById('hsStartDate').value;
+    if(!name||!pass||!startDate){alert('Điền đầy đủ thông tin!'); return;}
+    const id='HS'+(students.length+1).toString().padStart(3,'0');
+    students.push({id,name,pass,startDate,hk1:null,hk2:null,avg:null});
+    localStorage.setItem('students',JSON.stringify(students));
+    renderTables(); clearStudentInputs();
+}
+function editStudent(i){
+    const s=students[i];
+    const newName=prompt("Tên học sinh:",s.name);
+    const newPass=prompt("Mật khẩu:",s.pass);
+    const newDate=prompt("Ngày bắt đầu:",s.startDate);
+    if(newName&&newPass&&newDate){
+        students[i].name=newName; students[i].pass=newPass; students[i].startDate=newDate;
+        localStorage.setItem('students',JSON.stringify(students));
+        renderTables();
+    }
+}
+function deleteStudent(i){if(confirm('Xác nhận xóa học sinh?')){students.splice(i,1);localStorage.setItem('students',JSON.stringify(students));renderTables();}}
+function clearStudentInputs(){document.getElementById('hsName').value='';document.getElementById('hsPass').value='';document.getElementById('hsStartDate').value='';}
+
+// Teachers
+function addTeacher(){
+    const name=document.getElementById('gvName').value;
+    const pass=document.getElementById('gvPass').value;
+    if(!name||!pass){alert('Điền đầy đủ thông tin!'); return;}
+    const id='GV'+(teachers.length+1).toString().padStart(3,'0');
+    teachers.push({id,name,pass});
+    localStorage.setItem('teachers',JSON.stringify(teachers));
+    renderTables(); clearTeacherInputs();
+}
+function editTeacher(i){
+    const t=teachers[i];
+    const newName=prompt("Tên giáo viên:",t.name);
+    const newPass=prompt("Mật khẩu:",t.pass);
+    if(newName&&newPass){teachers[i].name=newName;teachers[i].pass=newPass;localStorage.setItem('teachers',JSON.stringify(teachers));renderTables();}
+}
+function deleteTeacher(i){if(confirm('Xác nhận xóa giáo viên?')){teachers.splice(i,1);localStorage.setItem('teachers',JSON.stringify(teachers));renderTables();}}
+function clearTeacherInputs(){document.getElementById('gvName').value='';document.getElementById('gvPass').value='';}
+</script>
+</body>
+</html>

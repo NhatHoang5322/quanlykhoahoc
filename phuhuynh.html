@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phụ huynh Dashboard</title>
+<style>
+body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color:#f3e5f5; margin:0; color:#333;}
+header { background-color:#8e24aa; color:white; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
+.container { max-width:1000px; margin:20px auto; padding:20px; background:white; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+h2 { color:#8e24aa; margin-top:0; }
+input, button { padding:10px; margin:5px 0; border-radius:15px; border:1px solid #ccc; font-size:16px; }
+button { cursor:pointer; font-weight:bold; border:none; transition:0.3s; }
+button:hover { opacity:0.8; }
+.login-btn { background-color:#8e24aa; color:white; }
+table { width:100%; border-collapse:collapse; margin-top:15px; }
+th, td { padding:10px; border:1px solid #ddd; text-align:center; border-radius:10px; }
+th { background-color:#ba68c8; color:white; }
+tr:nth-child(even) { background-color:#f1f1f1; }
+.logout { float:right; margin-top:-60px; }
+@media(max-width:600px){ input, button { width:100%; box-sizing:border-box; } }
+</style>
+</head>
+<body>
+<header>Phụ huynh Dashboard</header>
+
+<div class="container">
+    <div class="logout">
+        <button class="login-btn" onclick="location.href='Trangchu.html'">Đăng xuất</button>
+    </div>
+
+    <div id="loginDiv">
+        <h2>Đăng nhập Học sinh</h2>
+        <input type="text" id="hsUser" placeholder="Mã HS"><br>
+        <input type="password" id="hsPass" placeholder="Mật khẩu"><br>
+        <button class="login-btn" onclick="loginHS()">Đăng nhập</button>
+    </div>
+
+    <div id="phDiv" style="display:none;">
+        <h2>Điểm học tập</h2>
+        <table id="scoreTable"></table>
+    </div>
+</div>
+
+<script>
+let students = JSON.parse(localStorage.getItem('students') || '[]');
+let currentHS = null;
+
+function loginHS(){
+    const id=document.getElementById('hsUser').value;
+    const pass=document.getElementById('hsPass').value;
+    const hs=students.find(s=>s.id===id&&s.pass===pass);
+    if(hs){ 
+        currentHS=hs; 
+        document.getElementById('loginDiv').style.display='none'; 
+        document.getElementById('phDiv').style.display='block'; 
+        renderScore(); 
+    } else alert('Sai mã HS hoặc mật khẩu!');
+}
+
+function renderScore(){
+    const table=document.getElementById('scoreTable');
+    table.innerHTML='<tr><th>Học kì</th><th>Đọc</th><th>Nghe</th><th>Nói</th><th>Viết</th><th>Trung bình</th><th>Ghi chú</th></tr>';
+    let hkCompleted = 0;
+
+    ['hk1','hk2'].forEach(hk=>{
+        const d=currentHS[hk];
+        if(d.avg !== null) hkCompleted++;
+        table.innerHTML+=`<tr>
+            <td>${hk.toUpperCase()}</td>
+            <td style="background-color:${colorByScore(d.doc)}">${d.doc??'-'}</td>
+            <td style="background-color:${colorByScore(d.nghe)}">${d.nghe??'-'}</td>
+            <td style="background-color:${colorByScore(d.noi)}">${d.noi??'-'}</td>
+            <td style="background-color:${colorByScore(d.viet)}">${d.viet??'-'}</td>
+            <td style="background-color:${colorByScore(d.avg)}">${d.avg??'-'}</td>
+            <td>${d.note??'-'}</td>
+        </tr>`;
+    });
+
+    // Nếu giáo viên đã nhập đủ cả 2 học kì → tính điểm tổng khóa
+    if(hkCompleted === 2){
+        const avgCourse = ((parseFloat(currentHS.hk1.avg) + parseFloat(currentHS.hk2.avg))/2).toFixed(2);
+        currentHS.avgCourse = avgCourse;
+        localStorage.setItem('students', JSON.stringify(students));
+        table.innerHTML+=`<tr style="font-weight:bold; background-color:#e0e0e0;">
+            <td colspan="5">Điểm trung bình cả khóa</td>
+            <td>${avgCourse}</td>
+            <td>-</td>
+        </tr>`;
+    }
+}
+
+// Highlight điểm
+function colorByScore(score){
+    if(score===null || score==='-' || score==='') return '';
+    if(score>=8) return '#c8e6c9'; // xanh lá
+    if(score<5) return '#ffcdd2'; // đỏ
+    return '#fff9c4'; // vàng
+}
+</script>
+</body>
+</html>

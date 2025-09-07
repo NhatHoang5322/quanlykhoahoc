@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Khóa Học</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Quản Lý Khóa Học</h1>
+        <nav>
+            <a href="#home">Trang chủ</a>
+            <a href="#courses">Khóa học</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home">
+            <h2>Chào mừng đến với hệ thống quản lý khóa học</h2>
+            <p>Nhấn nút dưới đây để thêm khóa học mới:</p>
+            <input type="text" id="newCourse" placeholder="Tên khóa học">
+            <button onclick="addCourse()">Thêm khóa học</button>
+        </section>
+
+        <section id="courses">
+            <h2>Danh sách khóa học</h2>
+            <ul id="courseList">
+                <li>HTML cơ bản</li>
+                <li>CSS nâng cao</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Quản Lý Khóa Học</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

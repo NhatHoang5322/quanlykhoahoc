@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giáo viên Dashboard</title>
+<style>
+body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color:#e3f2fd; margin:0; color:#333;}
+header { background-color:#1565c0; color:white; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
+.container { max-width:1000px; margin:20px auto; padding:20px; background:white; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+h2 { color:#1565c0; margin-top:0; }
+input, select, button, textarea { padding:10px; margin:5px 0; border-radius:15px; border:1px solid #ccc; font-size:16px; }
+button { cursor:pointer; font-weight:bold; border:none; transition:0.3s; }
+button:hover { opacity:0.8; }
+.save-btn { background-color:#1565c0; color:white; }
+table { width:100%; border-collapse:collapse; margin-top:15px; }
+th, td { padding:10px; border:1px solid #ddd; text-align:center; border-radius:10px; }
+th { background-color:#64b5f6; color:white; }
+tr:nth-child(even) { background-color:#f1f1f1; }
+.logout { float:right; margin-top:-60px; }
+@media(max-width:600px){ input, select, button, textarea { width:100%; box-sizing:border-box; } }
+</style>
+</head>
+<body>
+<header>Giáo viên Dashboard</header>
+
+<div class="container">
+    <div class="logout">
+        <button class="save-btn" onclick="location.href='Trangchu.html'">Đăng xuất</button>
+    </div>
+
+    <div id="loginDiv">
+        <h2>Đăng nhập Giáo viên</h2>
+        <input type="text" id="gvUser" placeholder="Mã GV"><br>
+        <input type="password" id="gvPass" placeholder="Mật khẩu"><br>
+        <button class="save-btn" onclick="loginGV()">Đăng nhập</button>
+    </div>
+
+    <div id="gvDiv" style="display:none;">
+        <h2>Nhập điểm học sinh</h2>
+        <select id="studentSelect" onchange="renderSkillInputs()"></select><br>
+
+        <select id="hkSelect" onchange="renderSkillInputs()">
+            <option value="hk1">Học kì 1</option>
+            <option value="hk2">Học kì 2</option>
+        </select>
+
+        <div id="skillsDiv">
+            <input type="number" id="doc" placeholder="Đọc" min="0" max="10">
+            <input type="number" id="nghe" placeholder="Nghe" min="0" max="10">
+            <input type="number" id="noi" placeholder="Nói" min="0" max="10">
+            <input type="number" id="viet" placeholder="Viết" min="0" max="10">
+            <textarea id="note" placeholder="Ghi chú/nhận xét"></textarea><br>
+            <button class="save-btn" onclick="saveScore()">Lưu điểm</button>
+        </div>
+
+        <h3>Danh sách điểm học sinh</h3>
+        <table id="scoreTable"></table>
+    </div>
+</div>
+
+<script>
+let teachers = JSON.parse(localStorage.getItem('teachers') || '[]');
+let students = JSON.parse(localStorage.getItem('students') || '[]');
+let currentGV = null;
+
+function loginGV(){
+    const id=document.getElementById('gvUser').value;
+    const pass=document.getElementById('gvPass').value;
+    const gv=teachers.find(t=>t.id===id&&t.pass===pass);
+    if(gv){ 
+        currentGV=gv; 
+        document.getElementById('loginDiv').style.display='none'; 
+        document.getElementById('gvDiv').style.display='block'; 
+        populateStudents(); 
+        renderScores(); 
+    }
+    else alert('Sai mã GV hoặc mật khẩu!');
+}
+
+function populateStudents(){
+    const select=document.getElementById('studentSelect');
+    select.innerHTML='';
+    students.forEach(s=>{
+        // Khởi tạo nếu chưa có
+        if(!s.hk1) s.hk1={doc:null,nghe:null,noi:null,viet:null,avg:null,note:''};
+        if(!s.hk2) s.hk2={doc:null,nghe:null,noi:null,viet:null,avg:null,note:''};
+        select.innerHTML+=`<option value="${s.id}">${s.name} (${s.id})</option>`;
+    });
+    renderSkillInputs();
+}
+
+function renderSkillInputs(){
+    const studentId=document.getElementById('studentSelect').value;
+    const hk=document.getElementById('hkSelect').value;
+    const student=students.find(s=>s.id===studentId);
+    const data=student[hk];
+    document.getElementById('doc').value=data.doc??'';
+    document.getElementById('nghe').value=data.nghe??'';
+    document.getElementById('noi').value=data.noi??'';
+    document.getElementById('viet').value=data.viet??'';
+    document.getElementById('note').value=data.note??'';
+}
+
+function saveScore(){
+    const studentId=document.getElementById('studentSelect').value;
+    const hk=document.getElementById('hkSelect').value;
+    const student=students.find(s=>s.id===studentId);
+
+    const doc=parseFloat(document.getElementById('doc').value);
+    const nghe=parseFloat(document.getElementById('nghe').value);
+    const noi=parseFloat(document.getElementById('noi').value);
+    const viet=parseFloat(document.getElementById('viet').value);
+    const note=document.getElementById('note').value;
+
+    if([doc,nghe,noi,viet].some(v=>isNaN(v))){ alert('Điền đầy đủ điểm 4 kỹ năng!'); return; }
+
+    student[hk]={ doc, nghe, noi, viet, avg:((doc+nghe+noi+viet)/4).toFixed(2), note };
+
+    // Nếu HK2 đã nhập → tính trung bình cả khóa
+    if(student.hk1.avg!==null && student.hk2.avg!==null){
+        student.avgCourse=((parseFloat(student.hk1.avg)+parseFloat(student.hk2.avg))/2).toFixed(2);
+    }
+
+    localStorage.setItem('students', JSON.stringify(students));
+    renderScores();
+    alert('Đã lưu điểm!');
+}
+
+function renderScores(){
+    const table=document.getElementById('scoreTable');
+    table.innerHTML='<tr><th>Mã HS</th><th>Tên</th><th>Học kì</th><th>Đọc</th><th>Nghe</th><th>Nói</th><th>Viết</th><th>Trung bình</th><th>Ghi chú</th></tr>';
+    students.forEach(s=>{
+        ['hk1','hk2'].forEach(hk=>{
+            const d=s[hk];
+            table.innerHTML+=`<tr>
+                <td>${s.id}</td><td>${s.name}</td><td>${hk.toUpperCase()}</td>
+                <td style="background-color:${colorByScore(d.doc)}">${d.doc??'-'}</td>
+                <td style="background-color:${colorByScore(d.nghe)}">${d.nghe??'-'}</td>
+                <td style="background-color:${colorByScore(d.noi)}">${d.noi??'-'}</td>
+                <td style="background-color:${colorByScore(d.viet)}">${d.viet??'-'}</td>
+                <td style="background-color:${colorByScore(d.avg)}">${d.avg??'-'}</td>
+                <td>${d.note??'-'}</td>
+            </tr>`;
+        });
+        // Nếu nhập đủ HK1 & HK2 → hiển thị trung bình khóa
+        if(s.hk1.avg!==null && s.hk2.avg!==null){
+            table.innerHTML+=`<tr style="font-weight:bold; background-color:#e0e0e0;">
+                <td colspan="7">Điểm trung bình cả khóa</td>
+                <td>${s.avgCourse}</td>
+                <td>-</td>
+            </tr>`;
+        }
+    });
+}
+
+// Highlight điểm
+function colorByScore(score){
+    if(score===null || score==='-' || score==='') return '';
+    if(score>=8) return '#c8e6c9'; // xanh lá
+    if(score<5) return '#ffcdd2'; // đỏ
+    return '#fff9c4'; // vàng
+}
+</script>
+</body>
+</html>
